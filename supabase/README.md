@@ -10,7 +10,7 @@ Stage 2 establishes persistence only. It does not enable AI, email, payments, or
 - `case-documents` is private and limited to 10 MiB and approved MIME types.
 - Storage object paths must be `user_id/case_id/<opaque-file-name>`; Storage RLS checks both path user and case ownership.
 - No `service_role` key belongs in browser code.
-- No `SECURITY DEFINER` functions are introduced.
+- SECURITY DEFINER is limited to reviewed, authenticated-only RPC boundaries that perform serialized state changes. These functions set `search_path=''`, verify `auth.uid()` and case ownership, and revoke direct table writes where the RPC is the boundary. Security Advisor warnings for these intentional functions must remain documented and reviewed.
 - Customer audit events are read-only through the Data API.
 
 ## Verification before release
@@ -21,7 +21,8 @@ Stage 2 establishes persistence only. It does not enable AI, email, payments, or
 4. Verify all public customer tables have RLS enabled.
 5. Test two authenticated users: user A can CRUD only A-owned rows and objects; user B cannot read/update/delete A-owned rows or objects.
 6. Verify an authenticated user cannot write `sources` or `audit_events` through the Data API.
-7. Verify Storage rejects paths whose first segment is another user or whose second segment is a case owned by another user.
+7. Verify reviewed RPCs are not executable by `anon`, use an empty search path, and enforce the current case/user boundary.
+8. Verify Storage rejects paths whose first segment is another user or whose second segment is a case owned by another user.
 
 ## Recovery
 

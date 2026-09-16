@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertWorkflowEvent } from "./events";
+import { assertWorkflowEvent, buildFollowupDueEvent } from "./events";
 
 describe("workflow event contracts", () => {
   it("accepts a valid documents.uploaded event", () => {
@@ -29,5 +29,23 @@ describe("workflow event contracts", () => {
         data: { caseId: "case-1", userId: "user-1", documentIds: [], occurredAt: new Date().toISOString() },
       }),
     ).toThrow(/at least one document/);
+
+    expect(() =>
+      assertWorkflowEvent({
+        name: "followup.due",
+        data: { caseId: "case-1", userId: "user-1", reminderId: "", idempotencyKey: "", dueAt: "", occurredAt: new Date().toISOString() },
+      }),
+    ).toThrow(/reminder and retry/);
+  });
+
+  it("accepts a retry-identifiable follow-up event", () => {
+    const event = buildFollowupDueEvent({
+      caseId: "case-1",
+      userId: "user-1",
+      reminderId: "reminder-1",
+      idempotencyKey: "retry-1",
+      dueAt: "2026-09-17T09:00:00.000Z",
+    });
+    expect(event.name).toBe("followup.due");
   });
 });
