@@ -71,14 +71,8 @@ begin
 
   if jsonb_typeof(p_structured_content) <> 'object'
      or jsonb_typeof(p_structured_content -> 'sentences') <> 'array'
-     or jsonb_typeof(p_structured_content -> 'body') <> 'string' then
+     or jsonb_array_length(p_structured_content -> 'sentences') = 0 then
     raise exception 'Structured draft content is invalid';
-  end if;
-
-  -- The persisted display/send body must be exactly the body that was safety/evidence validated.
-  v_structured_body := p_structured_content ->> 'body';
-  if v_structured_body is distinct from p_body then
-    raise exception 'Draft body does not match grounded structured content';
   end if;
 
   if jsonb_typeof(p_safety_result) <> 'object'
@@ -148,6 +142,16 @@ begin
     end if;
   end loop;
 
+  -- The persisted display/send body is derived from the exact ordered sentence list
+  -- that was schema/evidence checked above. This prevents an ungrounded p_body bypass.
+  select string_agg(sentence ->> 'text', E'\n\n' order by ordinality)
+  into v_structured_body
+  from jsonb_array_elements(p_structured_content -> 'sentences') with ordinality as items(sentence, ordinality);
+
+  if v_structured_body is distinct from p_body then
+    raise exception 'Draft body does not match grounded structured sentences';
+  end if;
+
   -- Defense in depth for the safety categories that can be checked deterministically.
   v_combined_text := p_subject || ' ' || p_body;
   if v_combined_text ~* '\m(fraud|scam|criminal|stole|theft)\M' then
@@ -160,7 +164,7 @@ begin
     raise exception 'Draft contains blocked legal-rights language';
   end if;
   if v_combined_text ~ '[0-9]{3}-[0-9]{2}-[0-9]{4}'
-     or regexp_replace(v_combined_text, '[^0-9]', '', 'g') ~ '[0-9]{13,19}' then
+     or v_combined_text ~ '(^|[^0-9])([0-9][ -]?){12,18}[0-9]([^0-9]|$)' then
     raise exception 'Draft contains blocked sensitive data';
   end if;
 
@@ -192,7 +196,7 @@ begin
     p_facts_version,
     v_next_version,
     trim(p_subject),
-    p_body,
+    v_structured_body,
     p_structured_content,
     '[]'::jsonb,
     coalesce(p_evidence_claim_ids, '{}'::uuid[]),
