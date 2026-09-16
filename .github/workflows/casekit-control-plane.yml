@@ -2,7 +2,7 @@ name: CaseKit Control Plane
 
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, closed]
 
@@ -13,7 +13,9 @@ permissions:
 
 jobs:
   announce-ready-task:
-    if: github.event_name == 'issues' && github.event.label.name == 'codex-ready'
+    if: >-
+      github.event_name == 'issues' &&
+      contains(github.event.issue.labels.*.name, 'codex-ready')
     runs-on: ubuntu-latest
     steps:
       - name: Mark task queued
@@ -29,7 +31,10 @@ jobs:
             });
 
   pr-gate:
-    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Add stage-gate checklist
@@ -46,7 +51,11 @@ jobs:
             });
 
   merged:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Record merge completion
