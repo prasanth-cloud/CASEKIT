@@ -19,6 +19,7 @@ export type CaseStatus =
   | "blocked";
 
 export type DocumentStatus = "uploaded" | "scanning" | "ready" | "failed" | "deleted";
+export type DraftStatus = "generated" | "edited" | "approved" | "sent" | "archived";
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -58,6 +59,20 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["extracted_facts"]["Insert"]>;
         Relationships: [];
       };
+      drafts: {
+        Row: {
+          id: string; case_id: string; facts_version: number; version: number; subject: string; body: string; structured_content: Json;
+          attachments: Json; evidence_claim_ids: string[]; merchant_source_ids: string[]; safety_result: Json; prompt_version: string;
+          status: DraftStatus; approved_at: string | null; sent_at: string | null; created_at: string;
+        };
+        Insert: {
+          id?: string; case_id: string; facts_version: number; version?: number; subject: string; body: string; structured_content?: Json;
+          attachments?: Json; evidence_claim_ids?: string[]; merchant_source_ids?: string[]; safety_result: Json; prompt_version: string;
+          status?: DraftStatus; approved_at?: string | null; sent_at?: string | null; created_at?: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
       audit_events: {
         Row: { id: string; user_id: string | null; case_id: string | null; actor_type: string; action: string; changes: Json; prompt_version: string | null; supporting_document_ids: string[]; created_at: string };
         Insert: { id?: string; user_id?: string | null; case_id?: string | null; actor_type: string; action: string; changes?: Json; prompt_version?: string | null; supporting_document_ids?: string[]; created_at?: string };
@@ -79,8 +94,19 @@ export type Database = {
         Args: { p_case_id: string; p_expected_facts_version: number };
         Returns: Database["public"]["Tables"]["cases"]["Row"];
       };
+      create_case_draft_version: {
+        Args: {
+          p_case_id: string; p_facts_version: number; p_expected_draft_version: number; p_subject: string; p_body: string;
+          p_structured_content: Json; p_evidence_claim_ids: string[]; p_merchant_source_ids: string[]; p_safety_result: Json; p_prompt_version: string;
+        };
+        Returns: Database["public"]["Tables"]["drafts"]["Row"];
+      };
+      approve_case_draft: {
+        Args: { p_case_id: string; p_draft_id: string; p_expected_draft_version: number };
+        Returns: Database["public"]["Tables"]["drafts"]["Row"];
+      };
     };
-    Enums: { case_issue_type: CaseIssueType; case_status: CaseStatus; document_status: DocumentStatus };
+    Enums: { case_issue_type: CaseIssueType; case_status: CaseStatus; document_status: DocumentStatus; draft_status: DraftStatus };
     CompositeTypes: Record<string, never>;
   };
 };
@@ -89,4 +115,5 @@ export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 export type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
 export type DocumentRow = Database["public"]["Tables"]["documents"]["Row"];
 export type ExtractedFactsRow = Database["public"]["Tables"]["extracted_facts"]["Row"];
+export type DraftRow = Database["public"]["Tables"]["drafts"]["Row"];
 export type AuditEventRow = Database["public"]["Tables"]["audit_events"]["Row"];
