@@ -75,7 +75,8 @@ begin
 
   if jsonb_typeof(p_safety_result) <> 'object'
      or coalesce((p_safety_result ->> 'passed')::boolean, false) is not true
-     or coalesce(jsonb_array_length(p_safety_result -> 'reasons'), 0) <> 0 then
+     or coalesce(jsonb_typeof(p_safety_result -> 'reasons'), '') <> 'array'
+     or jsonb_array_length(p_safety_result -> 'reasons') <> 0 then
     raise exception 'Draft has not passed safety review';
   end if;
 
@@ -252,7 +253,8 @@ begin
   end if;
 
   if coalesce((v_draft.safety_result ->> 'passed')::boolean, false) is not true
-     or coalesce(jsonb_array_length(v_draft.safety_result -> 'reasons'), 0) <> 0 then
+     or coalesce(jsonb_typeof(v_draft.safety_result -> 'reasons'), '') <> 'array'
+     or jsonb_array_length(v_draft.safety_result -> 'reasons') <> 0 then
     raise exception 'Draft has not passed safety review';
   end if;
 
