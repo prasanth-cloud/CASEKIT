@@ -1,11 +1,11 @@
-import type { EvidenceExtractionAdapter } from "@/lib/ai/extraction-adapter";
+import type { EvidenceExtractionAdapter } from "../ai/extraction-adapter";
 import {
   classifyMissingInformation,
   validateExtraction,
   type ExtractedFactsCandidate,
-} from "@/lib/ai/extraction-schema";
-import { evidenceBoundaryText, type NormalizedEvidence } from "@/lib/documents/normalize";
-import { redactSensitiveText } from "@/lib/documents/redact";
+} from "../ai/extraction-schema";
+import { evidenceBoundaryText, type NormalizedEvidence } from "../documents/normalize";
+import { redactSensitiveText } from "../documents/redact";
 
 export type AnalysisResult = {
   candidate: ExtractedFactsCandidate;
