@@ -46,10 +46,13 @@ begin
     raise exception 'Authentication required';
   end if;
 
-  if not exists (
-    select 1 from public.cases c
-    where c.id = p_case_id and c.user_id = v_user_id
-  ) then
+  -- Serialize all version transitions for a case and verify tenant ownership.
+  perform 1
+  from public.cases c
+  where c.id = p_case_id and c.user_id = v_user_id
+  for update;
+
+  if not found then
     raise exception 'Case not found';
   end if;
 
@@ -141,8 +144,7 @@ begin
 
   select max(d.version) into v_current_version
   from public.drafts d
-  where d.case_id = p_case_id
-  for update;
+  where d.case_id = p_case_id;
 
   v_current_version := coalesce(v_current_version, 0);
   if v_current_version <> p_expected_draft_version then
@@ -216,10 +218,13 @@ begin
     raise exception 'Authentication required';
   end if;
 
-  if not exists (
-    select 1 from public.cases c
-    where c.id = p_case_id and c.user_id = v_user_id
-  ) then
+  -- Serialize approval against concurrent draft revisions and verify tenant ownership.
+  perform 1
+  from public.cases c
+  where c.id = p_case_id and c.user_id = v_user_id
+  for update;
+
+  if not found then
     raise exception 'Case not found';
   end if;
 
