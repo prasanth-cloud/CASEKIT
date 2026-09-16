@@ -9,6 +9,10 @@ export function WorkspaceShell({ children }: Readonly<{ children: React.ReactNod
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
+  if (pathname.startsWith("/login") || pathname.startsWith("/auth")) {
+    return <main>{children}</main>;
+  }
+
   return (
     <div className={collapsed ? "workspace-shell workspace-shell-collapsed" : "workspace-shell"}>
       <aside className="sidebar" aria-label="Primary">
@@ -49,10 +53,10 @@ export function WorkspaceShell({ children }: Readonly<{ children: React.ReactNod
             </Link>
           ))}
           <div className="account-row">
-            <div className="avatar" aria-hidden="true">PB</div>
+            <div className="avatar" aria-hidden="true">CK</div>
             <div className="account-copy">
-              <div className="account-name">Workspace user</div>
-              <div className="account-caption">Prototype session</div>
+              <div className="account-name">Authenticated workspace</div>
+              <div className="account-caption">Supabase session</div>
             </div>
           </div>
         </div>
