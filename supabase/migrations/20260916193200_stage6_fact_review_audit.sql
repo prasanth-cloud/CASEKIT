@@ -1,5 +1,6 @@
 -- Stage 6: allow authenticated users to append only their own fixed user-review audit events.
 -- Audit rows remain immutable through the Data API: no UPDATE or DELETE grants/policies are added.
+-- The ownership predicate is the tenant-isolation gate for every insert path.
 
 create policy audit_user_review_insert
 on public.audit_events
