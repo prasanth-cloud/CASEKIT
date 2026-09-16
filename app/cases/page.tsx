@@ -72,8 +72,11 @@ export default async function CasesPage({ searchParams }: CasesPageProps) {
               <thead><tr><th>Case</th><th>Issue</th><th>Status</th><th>Created</th><th>Recent activity</th></tr></thead>
               <tbody>
                 {cases.map((item) => (
-                  <tr key={item.id} tabIndex={0}>
-                    <td><div className="primary-cell">{item.merchant_name || "Unnamed merchant"}</div><div className="muted-cell">{item.id.slice(0, 8)}</div></td>
+                  <tr key={item.id}>
+                    <td>
+                      <Link href={`/cases/${item.id}`} className="primary-cell intake-link-button">{item.merchant_name || "Unnamed merchant"}</Link>
+                      <div className="muted-cell">{item.id.slice(0, 8)}</div>
+                    </td>
                     <td>{label(item.issue_type)}</td>
                     <td><span className={`status-badge status-${item.status.replaceAll("_", "-")}`}>{label(item.status)}</span></td>
                     <td>{new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
