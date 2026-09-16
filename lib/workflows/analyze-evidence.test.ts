@@ -4,6 +4,7 @@ import type { ExtractedFactsCandidate } from "@/lib/ai/extraction-schema";
 import { normalizeEvidence } from "@/lib/documents/normalize";
 import { analyzeEvidence } from "./analyze-evidence";
 
+const source = [{ documentId: "doc-1", locator: "line 1" }];
 const fixture: ExtractedFactsCandidate = {
   merchant: "Example Store",
   orderId: "A-100",
@@ -16,12 +17,11 @@ const fixture: ExtractedFactsCandidate = {
   problemDescription: "Refund has not arrived.",
   customerRequest: "Refund status",
   claims: [
-    {
-      field: "order_id",
-      value: "A-100",
-      confidence: 0.98,
-      sources: [{ documentId: "doc-1", locator: "line 1" }],
-    },
+    { field: "merchant", value: "Example Store", confidence: 0.97, sources: source },
+    { field: "order_id", value: "A-100", confidence: 0.98, sources: source },
+    { field: "issue_type", value: "refund_not_received", confidence: 0.95, sources: source },
+    { field: "problem_description", value: "Refund has not arrived.", confidence: 0.96, sources: source },
+    { field: "customer_request", value: "Refund status", confidence: 0.96, sources: source },
   ],
   missingInformation: ["should-be-recomputed"],
 };
@@ -59,7 +59,12 @@ describe("analyzeEvidence", () => {
   });
 
   it("rejects adapter output with unsupported factual claims", async () => {
-    const invalid = { ...fixture, claims: [{ field: "merchant", value: "Example Store", confidence: 0.9, sources: [] }] };
+    const invalid: ExtractedFactsCandidate = {
+      ...fixture,
+      claims: fixture.claims.map((claim) =>
+        claim.field === "merchant" ? { ...claim, sources: [] } : claim,
+      ),
+    };
     await expect(
       analyzeEvidence({
         caseId: "case-1",
