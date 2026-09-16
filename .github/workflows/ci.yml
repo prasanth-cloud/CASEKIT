@@ -27,5 +27,17 @@ jobs:
         run: pnpm typecheck
       - name: Unit tests
         run: pnpm test
+      - name: Integration boundary tests
+        run: pnpm exec vitest run tests/integration
+      - name: Accessibility contracts
+        run: pnpm exec vitest run tests/a11y
+      - name: AI safety evaluations
+        run: pnpm exec vitest run tests/evals
+      - name: Release gate contract
+        run: node --test scripts/release-gates.test.mjs
       - name: Build
         run: pnpm build
+      - name: Public production smoke
+        run: node scripts/public-smoke.mjs
+      - name: CI release configuration check
+        run: node scripts/check-release-gates.mjs --ci
