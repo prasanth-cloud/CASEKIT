@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { FixtureExtractionAdapter } from "@/lib/ai/extraction-adapter";
-import type { ExtractedFactsCandidate } from "@/lib/ai/extraction-schema";
-import { normalizeEvidence } from "@/lib/documents/normalize";
+import { FixtureExtractionAdapter } from "../ai/extraction-adapter";
+import type { ExtractedFactsCandidate } from "../ai/extraction-schema";
+import { normalizeEvidence } from "../documents/normalize";
 import { analyzeEvidence } from "./analyze-evidence";
 
 const source = [{ documentId: "doc-1", locator: "line 1" }];
