@@ -1,4 +1,6 @@
 -- Stage 6 transactional review functions. SECURITY INVOKER preserves table RLS.
+-- User-edited facts are deliberately user-sourced: they must not inherit evidence ids
+-- from a prior AI extraction because those documents may not support the revised values.
 
 create or replace function public.revise_case_facts(
   p_case_id uuid,
@@ -64,8 +66,8 @@ begin
     nullif(trim(p_item_description), ''), p_amount_paid, p_delivery_date, p_promised_date, p_issue_type,
     nullif(trim(p_problem_description), ''), nullif(trim(p_customer_request), ''),
     '[]'::jsonb, null,
-    coalesce(v_previous.source_document_ids, '{}'::uuid[]),
-    coalesce(v_previous.schema_version, 'user-review-v1'), 'user', true
+    '{}'::uuid[],
+    'user-review-v1', 'user', true
   ) returning * into v_new;
 
   insert into public.audit_events(user_id, case_id, actor_type, action, changes, supporting_document_ids)
@@ -74,8 +76,12 @@ begin
     p_case_id,
     'user',
     'facts.revised',
-    jsonb_build_object('from_version', coalesce(v_previous.version, 0), 'to_version', v_next_version),
-    v_new.source_document_ids
+    jsonb_build_object(
+      'from_version', coalesce(v_previous.version, 0),
+      'to_version', v_next_version,
+      'provenance', 'user_review'
+    ),
+    '{}'::uuid[]
   );
 
   return v_new;
