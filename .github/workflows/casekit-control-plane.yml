@@ -1,0 +1,62 @@
+name: CaseKit Control Plane
+
+on:
+  issues:
+    types: [labeled]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, closed]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  announce-ready-task:
+    if: github.event_name == 'issues' && github.event.label.name == 'codex-ready'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark task queued
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: `🤖 **QUEUED FOR CODEX**\n\nTask is ready for a Codex worker. Follow AGENTS.md and DESIGN.md. Use one branch and one focused PR. Do not broaden scope.\n\nSuggested branch: \`codex/issue-${issue.number}\``
+            });
+
+  pr-gate:
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add stage-gate checklist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (context.payload.action !== 'opened') return;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: `### CaseKit automated stage gate\n- [ ] Scope matches one GitHub issue\n- [ ] AGENTS.md invariants preserved\n- [ ] DESIGN.md followed for UI work\n- [ ] Lint passes\n- [ ] Typecheck passes\n- [ ] Unit/integration tests pass\n- [ ] Screenshots supplied for UI changes\n- [ ] No secrets committed\n- [ ] No external email/payment side effects introduced without explicit approval\n- [ ] Security/privacy impact reviewed where applicable\n\nDo not start the next dependent stage until this PR is reviewed.`
+            });
+
+  merged:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record merge completion
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: `✅ **MERGED** — stage output landed on \`${pr.base.ref}\`. Dependent work may proceed only after its prerequisites are satisfied.`
+            });
