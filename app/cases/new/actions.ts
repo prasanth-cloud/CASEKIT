@@ -86,7 +86,7 @@ export async function createCaseWithEvidence(formData: FormData) {
         byte_size: document.byteSize,
         retention_until: retentionDate,
         status: "uploaded",
-        redaction_status: document.mimeType === "text/plain" ? "not_required" : "pending",
+        redaction_status: "pending",
       });
       if (metadataError) throw new Error(`Could not record metadata for ${document.name}.`);
     }
