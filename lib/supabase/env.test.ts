@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readSupabasePublicEnv } from "./env";
 
 describe("readSupabasePublicEnv", () => {
-  it("returns trimmed browser-safe values", () => {
+  it("allows explicit environment values to override defaults", () => {
     expect(
       readSupabasePublicEnv({
         NODE_ENV: "test",
@@ -12,7 +12,9 @@ describe("readSupabasePublicEnv", () => {
     ).toEqual({ url: "https://example.supabase.co", publishableKey: "sb_publishable_test" });
   });
 
-  it("rejects missing configuration", () => {
-    expect(() => readSupabasePublicEnv({ NODE_ENV: "test" })).toThrow(/Missing NEXT_PUBLIC_SUPABASE_URL/);
+  it("falls back to the browser-safe CaseKit project configuration", () => {
+    const env = readSupabasePublicEnv({ NODE_ENV: "test" });
+    expect(env.url).toBe("https://vplukseyrhgpbzitkwni.supabase.co");
+    expect(env.publishableKey.startsWith("sb_publishable_")).toBe(true);
   });
 });
