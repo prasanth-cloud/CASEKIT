@@ -15,7 +15,7 @@ export interface EvidenceExtractionAdapter {
 export class FixtureExtractionAdapter implements EvidenceExtractionAdapter {
   constructor(private readonly fixture: ExtractedFactsCandidate) {}
 
-  async extract(_input: ExtractionInput): Promise<ExtractedFactsCandidate> {
+  async extract(): Promise<ExtractedFactsCandidate> {
     return structuredClone(this.fixture);
   }
 }
