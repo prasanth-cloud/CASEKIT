@@ -32,6 +32,34 @@ export type DraftCandidate = {
   safety: DraftSafetyResult;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Parse the persisted sentence representation before it is displayed or used
+ * to create another immutable version. A malformed stored draft must fail
+ * closed instead of silently dropping an evidence link.
+ */
+export function parseDraftSentences(value: unknown): DraftSentence[] | null {
+  if (!isRecord(value) || !Array.isArray(value.sentences) || value.sentences.length === 0) return null;
+
+  const sentences: DraftSentence[] = [];
+  for (const item of value.sentences) {
+    if (!isRecord(item) || typeof item.text !== "string" || !item.text.trim() || typeof item.factual !== "boolean" || !Array.isArray(item.claimIds)) {
+      return null;
+    }
+
+    const claimIds = item.claimIds;
+    if (!claimIds.every((claimId): claimId is string => typeof claimId === "string" && claimId.trim().length > 0)) return null;
+    if (item.factual && claimIds.length === 0) return null;
+
+    sentences.push({ text: item.text, factual: item.factual, claimIds });
+  }
+
+  return sentences;
+}
+
 const threatPattern = /\b(threaten|hurt|harm|destroy|retaliate|ruin)\b/i;
 const fraudPattern = /\b(fraud|scam|criminal|stole|theft)\b/i;
 const legalRightsPattern = /\b(illegal|unlawful|violation of law|my legal rights?|statutory rights?|sue|lawsuit)\b/i;

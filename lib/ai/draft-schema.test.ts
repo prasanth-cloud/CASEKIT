@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canApproveDraft, evaluateDraftSafety, validateDraft, type DraftCandidate } from "./draft-schema";
+import { canApproveDraft, evaluateDraftSafety, parseDraftSentences, validateDraft, type DraftCandidate } from "./draft-schema";
 
 function safeDraft(): DraftCandidate {
   const base = {
@@ -23,6 +23,15 @@ function safeDraft(): DraftCandidate {
 }
 
 describe("Stage 7 grounded draft safety", () => {
+  it("fails closed when persisted structured content is malformed", () => {
+    expect(parseDraftSentences({ sentences: [{ text: "A grounded fact", factual: true, claimIds: ["claim-1"] }] })).toEqual([
+      { text: "A grounded fact", factual: true, claimIds: ["claim-1"] },
+    ]);
+    expect(parseDraftSentences({ sentences: [{ text: "A grounded fact", factual: true, claimIds: [] }] })).toBeNull();
+    expect(parseDraftSentences({ sentences: [{ text: "", factual: false, claimIds: [] }] })).toBeNull();
+    expect(parseDraftSentences({ sentences: [{ text: "A fact", factual: true, claimIds: ["claim-1"] }, "not a sentence"] })).toBeNull();
+  });
+
   it("approves a draft only when every factual sentence is evidence-linked", () => {
     const draft = safeDraft();
     expect(validateDraft(draft)).toEqual(draft);

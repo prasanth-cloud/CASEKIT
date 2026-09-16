@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { factProvenance, humanize, isReadyForDrafting, caseIssueTypes } from "@/lib/cases/review";
 import { createClient } from "@/lib/supabase/server";
 import { markCaseReady, reviseCaseFacts } from "./actions";
+import { DraftPanel } from "./draft-panel";
 import styles from "./workspace.module.css";
 
 type CaseWorkspaceProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string; error?: string; saved?: string; ready?: string }>;
+  searchParams: Promise<{ tab?: string; error?: string; saved?: string; ready?: string; generated?: string; draftSaved?: string; approved?: string }>;
 };
 
 const tabs = ["overview", "documents", "timeline", "tasks", "notes", "ai"] as const;
@@ -87,6 +88,9 @@ export default async function CaseWorkspace({ params, searchParams }: CaseWorksp
       {query.error ? <div className={`${styles.notice} ${styles.error}`} role="alert">{query.error}</div> : null}
       {query.saved ? <div className={styles.notice}>Reviewed facts saved as a new immutable version.</div> : null}
       {query.ready ? <div className={styles.notice}>Case marked ready for the next drafting stage. No message was sent.</div> : null}
+      {query.generated ? <div className={styles.notice}>Grounded draft generated from verified evidence. Nothing was sent.</div> : null}
+      {query.draftSaved ? <div className={styles.notice}>Draft edits saved as a new immutable version. Evidence-backed sentences remain locked.</div> : null}
+      {query.approved ? <div className={styles.notice}>Draft approved for manual use. No message was sent or queued.</div> : null}
 
       {tab === "overview" ? (
         <div className={styles.grid}>
@@ -181,7 +185,7 @@ export default async function CaseWorkspace({ params, searchParams }: CaseWorksp
 
       {tab === "tasks" ? <section className={styles.panel}><div className={styles.panelHeader}><h2>Tasks</h2></div><div className={styles.placeholder}>Task execution is outside Stage 6. This workspace intentionally does not create external side effects.</div></section> : null}
       {tab === "notes" ? <section className={styles.panel}><div className={styles.panelHeader}><h2>Notes</h2></div><div className={styles.placeholder}>Notes are reserved for a later scoped stage; no unversioned customer data is added here.</div></section> : null}
-      {tab === "ai" ? <section className={styles.panel}><div className={styles.panelHeader}><h2>AI</h2></div><div className={styles.placeholder}>AI remains contextual and evidence-bound. Draft generation is handled only after this review gate.</div></section> : null}
+      {tab === "ai" ? <DraftPanel caseId={id} caseStatus={caseRow.status} /> : null}
     </div>
   );
 }
