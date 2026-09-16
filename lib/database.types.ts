@@ -59,6 +59,18 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["extracted_facts"]["Insert"]>;
         Relationships: [];
       };
+      evidence_claims: {
+        Row: {
+          id: string; case_id: string; claim_text: string; document_id: string | null; source_reference: Json;
+          confidence: number | null; verified: boolean; created_at: string;
+        };
+        Insert: {
+          id?: string; case_id: string; claim_text: string; document_id?: string | null; source_reference: Json;
+          confidence?: number | null; verified?: boolean; created_at?: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
       drafts: {
         Row: {
           id: string; case_id: string; facts_version: number; version: number; subject: string; body: string; structured_content: Json;

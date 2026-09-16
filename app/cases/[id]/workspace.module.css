@@ -35,6 +35,8 @@
 .versionList { display: grid; gap: 8px; padding: 12px 16px 16px; }
 .version { border: 1px solid #eaecf0; border-radius: 8px; padding: 10px; font-size: 13px; }
 .version div + div { margin-top: 4px; color: #667085; }
+.draftTools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.draftToolStatus { color: var(--muted, #667085); font-size: 12px; font-weight: 400; }
 .placeholder { padding: 24px 16px; color: #667085; font-size: 14px; }
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .header { display: grid; } .form { grid-template-columns: 1fr; } .full, .actions { grid-column: auto; } .timelineItem { grid-template-columns: 1fr; gap: 4px; } }
