@@ -1,0 +1,47 @@
+name: Codex task
+description: A narrow implementation task suitable for an automated Codex worker
+title: "[Codex] "
+labels: ["codex-ready"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep tasks narrow. One worker, one branch, one PR. Follow AGENTS.md and DESIGN.md.
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What outcome should this task produce?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: In scope
+      description: Exact files/modules/behavior the worker may change.
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Explicitly list what must not be changed.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Include tests, typecheck, lint, screenshots, security checks as applicable.
+    validations:
+      required: true
+  - type: dropdown
+    id: worker
+    attributes:
+      label: Preferred worker
+      options:
+        - App/UI worker
+        - Platform/Quality worker
+        - Either
+    validations:
+      required: true
