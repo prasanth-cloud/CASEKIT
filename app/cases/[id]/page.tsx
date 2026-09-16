@@ -4,11 +4,12 @@ import { factProvenance, humanize, isReadyForDrafting, caseIssueTypes } from "@/
 import { createClient } from "@/lib/supabase/server";
 import { markCaseReady, reviseCaseFacts } from "./actions";
 import { DraftPanel } from "./draft-panel";
+import { FollowUpPanel } from "./follow-up-panel";
 import styles from "./workspace.module.css";
 
 type CaseWorkspaceProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string; error?: string; saved?: string; ready?: string; generated?: string; draftSaved?: string; approved?: string }>;
+  searchParams: Promise<{ tab?: string; error?: string; saved?: string; ready?: string; generated?: string; draftSaved?: string; approved?: string; notificationConsent?: string; reminderScheduled?: string; reminderDismissed?: string; outboundAuthorized?: string }>;
 };
 
 const tabs = ["overview", "documents", "timeline", "tasks", "notes", "ai"] as const;
@@ -91,6 +92,11 @@ export default async function CaseWorkspace({ params, searchParams }: CaseWorksp
       {query.generated ? <div className={styles.notice}>Grounded draft generated from verified evidence. Nothing was sent.</div> : null}
       {query.draftSaved ? <div className={styles.notice}>Draft edits saved as a new immutable version. Evidence-backed sentences remain locked.</div> : null}
       {query.approved ? <div className={styles.notice}>Draft approved for manual use. No message was sent or queued.</div> : null}
+      {query.notificationConsent === "enabled" ? <div className={styles.notice}>Reminder notifications enabled. Scheduling still requires an approved case.</div> : null}
+      {query.notificationConsent === "disabled" ? <div className={styles.notice}>Reminder notifications disabled. Existing reminders remain visible.</div> : null}
+      {query.reminderScheduled ? <div className={styles.notice}>Follow-up reminder scheduled. CaseKit will not contact anyone automatically.</div> : null}
+      {query.reminderDismissed ? <div className={styles.notice}>Follow-up reminder dismissed.</div> : null}
+      {query.outboundAuthorized ? <div className={styles.notice}>Outbound authorization recorded for the current draft. No email was sent.</div> : null}
 
       {tab === "overview" ? (
         <div className={styles.grid}>
@@ -183,7 +189,7 @@ export default async function CaseWorkspace({ params, searchParams }: CaseWorksp
         </section>
       ) : null}
 
-      {tab === "tasks" ? <section className={styles.panel}><div className={styles.panelHeader}><h2>Tasks</h2></div><div className={styles.placeholder}>Task execution is outside Stage 6. This workspace intentionally does not create external side effects.</div></section> : null}
+      {tab === "tasks" ? <FollowUpPanel caseId={id} /> : null}
       {tab === "notes" ? <section className={styles.panel}><div className={styles.panelHeader}><h2>Notes</h2></div><div className={styles.placeholder}>Notes are reserved for a later scoped stage; no unversioned customer data is added here.</div></section> : null}
       {tab === "ai" ? <DraftPanel caseId={id} caseStatus={caseRow.status} /> : null}
     </div>

@@ -32,6 +32,12 @@
 .empty { padding: 28px 16px; color: #667085; font-size: 14px; }
 .readiness { padding: 16px; display: grid; gap: 10px; }
 .readiness p { margin: 0; color: #667085; font-size: 13px; }
+.consentRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.consentRow strong { font-size: 13px; }
+.helper { color: #667085; font-size: 12px; font-weight: 400; }
+.checkboxField { display: flex; align-items: flex-start; gap: 8px; color: #344054; font-size: 13px; font-weight: 400; }
+.checkboxField input { margin-top: 2px; }
+.inlineForm { margin-top: 8px; }
 .versionList { display: grid; gap: 8px; padding: 12px 16px 16px; }
 .version { border: 1px solid #eaecf0; border-radius: 8px; padding: 10px; font-size: 13px; }
 .version div + div { margin-top: 4px; color: #667085; }

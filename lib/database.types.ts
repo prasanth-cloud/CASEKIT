@@ -20,15 +20,18 @@ export type CaseStatus =
 
 export type DocumentStatus = "uploaded" | "scanning" | "ready" | "failed" | "deleted";
 export type DraftStatus = "generated" | "edited" | "approved" | "sent" | "archived";
+export type ReminderStatus = "scheduled" | "sent" | "dismissed" | "cancelled";
+export type ReminderType = "follow_up" | "retention_expiry" | "review_needed";
+export type OutboundEmailCommandStatus = "prepared" | "sent" | "failed" | "cancelled";
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   public: {
     Tables: {
       profiles: {
-        Row: { id: string; email: string | null; name: string | null; country: string; marketing_consent: boolean; created_at: string; updated_at: string };
-        Insert: { id: string; email?: string | null; name?: string | null; country?: string; marketing_consent?: boolean; created_at?: string; updated_at?: string };
-        Update: { email?: string | null; name?: string | null; country?: string; marketing_consent?: boolean; updated_at?: string };
+        Row: { id: string; email: string | null; name: string | null; country: string; marketing_consent: boolean; notification_consent: boolean; created_at: string; updated_at: string };
+        Insert: { id: string; email?: string | null; name?: string | null; country?: string; marketing_consent?: boolean; notification_consent?: boolean; created_at?: string; updated_at?: string };
+        Update: { email?: string | null; name?: string | null; country?: string; marketing_consent?: boolean; notification_consent?: boolean; updated_at?: string };
         Relationships: [];
       };
       cases: {
@@ -91,6 +94,22 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      reminders: {
+        Row: { id: string; case_id: string; reminder_type: ReminderType; due_at: string; status: ReminderStatus; idempotency_key: string; created_at: string };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      outbound_email_commands: {
+        Row: {
+          id: string; case_id: string; user_id: string; draft_id: string; draft_version: number; recipient_email: string;
+          attachment_document_ids: string[]; destination_confirmed: boolean; attachments_confirmed: boolean;
+          send_authorized_at: string; status: OutboundEmailCommandStatus; sent_at: string | null; idempotency_key: string; created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -117,8 +136,27 @@ export type Database = {
         Args: { p_case_id: string; p_draft_id: string; p_expected_draft_version: number };
         Returns: Database["public"]["Tables"]["drafts"]["Row"];
       };
+      schedule_case_reminder: {
+        Args: { p_case_id: string; p_reminder_type: ReminderType; p_due_at: string; p_idempotency_key: string };
+        Returns: Database["public"]["Tables"]["reminders"]["Row"];
+      };
+      dismiss_case_reminder: {
+        Args: { p_case_id: string; p_reminder_id: string };
+        Returns: Database["public"]["Tables"]["reminders"]["Row"];
+      };
+      authorize_outbound_email: {
+        Args: {
+          p_case_id: string; p_draft_id: string; p_draft_version: number; p_recipient_email: string;
+          p_attachment_document_ids: string[]; p_destination_confirmed: boolean; p_attachments_confirmed: boolean;
+          p_send_authorized: boolean; p_idempotency_key: string;
+        };
+        Returns: Database["public"]["Tables"]["outbound_email_commands"]["Row"];
+      };
     };
-    Enums: { case_issue_type: CaseIssueType; case_status: CaseStatus; document_status: DocumentStatus; draft_status: DraftStatus };
+    Enums: {
+      case_issue_type: CaseIssueType; case_status: CaseStatus; document_status: DocumentStatus; draft_status: DraftStatus;
+      reminder_status: ReminderStatus; outbound_email_command_status: OutboundEmailCommandStatus;
+    };
     CompositeTypes: Record<string, never>;
   };
 };
