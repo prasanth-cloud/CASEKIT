@@ -41,12 +41,13 @@ declare
   v_sentence jsonb;
   v_claim_id text;
   v_combined_text text;
+  v_structured_body text;
 begin
   if v_user_id is null then
     raise exception 'Authentication required';
   end if;
 
-  -- Serialize all version transitions for a case and verify tenant ownership.
+  -- Serialize every draft/fact transition for this case on the same case-row lock.
   perform 1
   from public.cases c
   where c.id = p_case_id and c.user_id = v_user_id
@@ -69,8 +70,15 @@ begin
   end if;
 
   if jsonb_typeof(p_structured_content) <> 'object'
-     or jsonb_typeof(p_structured_content -> 'sentences') <> 'array' then
+     or jsonb_typeof(p_structured_content -> 'sentences') <> 'array'
+     or jsonb_typeof(p_structured_content -> 'body') <> 'string' then
     raise exception 'Structured draft content is invalid';
+  end if;
+
+  -- The persisted display/send body must be exactly the body that was safety/evidence validated.
+  v_structured_body := p_structured_content ->> 'body';
+  if v_structured_body is distinct from p_body then
+    raise exception 'Draft body does not match grounded structured content';
   end if;
 
   if jsonb_typeof(p_safety_result) <> 'object'
@@ -96,25 +104,37 @@ begin
     raise exception 'Draft references evidence outside this case';
   end if;
 
-  -- Every merchant source must be approved before it can ground a draft.
+  -- Every merchant source must be approved and must match the reviewed merchant.
   if exists (
     select 1
     from unnest(coalesce(p_merchant_source_ids, '{}'::uuid[])) source_id
     where not exists (
       select 1 from public.sources s
-      where s.id = source_id and s.approved_by_admin is not null
+      where s.id = source_id
+        and s.approved_by_admin is not null
+        and lower(trim(s.merchant_name)) = lower(trim(coalesce(v_current_facts.merchant, '')))
     )
   ) then
-    raise exception 'Draft references an unapproved merchant source';
+    raise exception 'Draft references an unapproved or mismatched merchant source';
   end if;
 
   -- Every factual sentence must cite at least one claim persisted with this draft.
   for v_sentence in
     select value from jsonb_array_elements(p_structured_content -> 'sentences')
   loop
+    if jsonb_typeof(v_sentence) <> 'object'
+       or jsonb_typeof(v_sentence -> 'text') <> 'string'
+       or jsonb_typeof(v_sentence -> 'factual') <> 'boolean'
+       or jsonb_typeof(v_sentence -> 'claimIds') <> 'array' then
+      raise exception 'Structured draft sentence is invalid';
+    end if;
+
+    if trim(coalesce(v_sentence ->> 'text', '')) = '' then
+      raise exception 'Structured draft sentence text is required';
+    end if;
+
     if coalesce((v_sentence ->> 'factual')::boolean, false) then
-      if jsonb_typeof(v_sentence -> 'claimIds') <> 'array'
-         or jsonb_array_length(v_sentence -> 'claimIds') = 0 then
+      if jsonb_array_length(v_sentence -> 'claimIds') = 0 then
         raise exception 'Factual draft sentence is missing evidence';
       end if;
 
@@ -139,7 +159,8 @@ begin
   if v_combined_text ~* '(illegal|unlawful|violation of law|my legal rights?|statutory rights?|\msue\M|lawsuit)' then
     raise exception 'Draft contains blocked legal-rights language';
   end if;
-  if v_combined_text ~ '[0-9]{3}-[0-9]{2}-[0-9]{4}' then
+  if v_combined_text ~ '[0-9]{3}-[0-9]{2}-[0-9]{4}'
+     or regexp_replace(v_combined_text, '[^0-9]', '', 'g') ~ '[0-9]{13,19}' then
     raise exception 'Draft contains blocked sensitive data';
   end if;
 
@@ -219,7 +240,7 @@ begin
     raise exception 'Authentication required';
   end if;
 
-  -- Serialize approval against concurrent draft revisions and verify tenant ownership.
+  -- Serialize approval against both draft revisions and fact revisions.
   perform 1
   from public.cases c
   where c.id = p_case_id and c.user_id = v_user_id
