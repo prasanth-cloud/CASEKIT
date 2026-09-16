@@ -1,6 +1,6 @@
 "use client";
 
-export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function Error({ reset }: { reset: () => void }) {
   return (
     <div className="page-wrap">
       <section className="panel" style={{ padding: 24 }}>
