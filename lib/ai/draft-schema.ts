@@ -34,7 +34,7 @@ export type DraftCandidate = {
 
 const threatPattern = /\b(threaten|hurt|harm|destroy|retaliate|ruin)\b/i;
 const fraudPattern = /\b(fraud|scam|criminal|stole|theft)\b/i;
-const legalRightsPattern = /\b(illegal|unlawful|violation of law|my legal right|statutory right|sue|lawsuit)\b/i;
+const legalRightsPattern = /\b(illegal|unlawful|violation of law|my legal rights?|statutory rights?|sue|lawsuit)\b/i;
 const sensitivePattern = /\b\d{3}-\d{2}-\d{4}\b|\b(?:\d[ -]*?){13,19}\b/;
 
 export function evaluateDraftSafety(candidate: Omit<DraftCandidate, "safety">): DraftSafetyResult {
