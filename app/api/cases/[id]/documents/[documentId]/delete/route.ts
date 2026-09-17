@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
-import { deletionAlreadyComplete, deletionAuditChanges, ownedStoragePath, retentionExpired, type DeletionReason } from "@/lib/documents/deletion";
+import { deletionAlreadyComplete, ownedStoragePath, retentionExpired, type DeletionReason } from "@/lib/documents/deletion";
 import { createClient } from "@/lib/supabase/server";
+
+type DeletionRpcClient = {
+  rpc: (
+    name: "finalize_document_deletion",
+    args: { p_case_id: string; p_document_id: string; p_expected_storage_path: string; p_reason: DeletionReason },
+  ) => PromiseLike<{ error: { message: string } | null }>;
+};
 
 function redirectToCase(request: Request, caseId: string, key: string, value = "1") {
   const url = new URL(`/cases/${caseId}`, request.url);
@@ -46,32 +53,22 @@ export async function POST(
     return redirectToCase(request, caseId, "error", "Document ownership validation failed.");
   }
 
-  // Delete the private object first. If a later metadata write fails, retrying this
-  // endpoint is safe: removing the same private path again is an idempotent repair step.
+  // The private object is removed through the caller's Storage RLS first. If the
+  // database finalization fails, retrying this endpoint safely repairs metadata/audit.
   const { error: storageError } = await supabase.storage.from("case-documents").remove([storagePath]);
   if (storageError) return redirectToCase(request, caseId, "error", "Document storage could not be deleted.");
 
-  const deletedAt = new Date().toISOString();
-  const { data: updated, error: updateError } = await supabase
-    .from("documents")
-    .update({ status: "deleted", deleted_at: deletedAt })
-    .eq("id", documentId)
-    .eq("case_id", caseId)
-    .eq("user_id", auth.user.id)
-    .select("id")
-    .maybeSingle();
-
-  if (updateError || !updated) return redirectToCase(request, caseId, "error", "Document metadata deletion could not be finalized. Retry the deletion.");
-
-  const { error: auditError } = await supabase.from("audit_events").insert({
-    user_id: auth.user.id,
-    case_id: caseId,
-    actor_type: "user",
-    action: "document.deleted",
-    changes: deletionAuditChanges(documentId, reason),
-    supporting_document_ids: [],
+  const rpc = supabase as unknown as DeletionRpcClient;
+  const { error: finalizeError } = await rpc.rpc("finalize_document_deletion", {
+    p_case_id: caseId,
+    p_document_id: documentId,
+    p_expected_storage_path: storagePath,
+    p_reason: reason,
   });
 
-  if (auditError) return redirectToCase(request, caseId, "error", "Document was deleted, but its audit record could not be finalized.");
+  if (finalizeError) {
+    return redirectToCase(request, caseId, "error", "Document storage was removed, but metadata finalization needs a retry.");
+  }
+
   return redirectToCase(request, caseId, "documentDeleted");
 }
