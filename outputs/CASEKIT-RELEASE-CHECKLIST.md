@@ -39,17 +39,18 @@ The default is disabled. `node scripts/check-release-gates.mjs --production` fai
 - [ ] RLS and private Storage isolation tested with two synthetic users.
 - [ ] Uploaded-document prompt injection, PII, unsupported source, unsafe-language, and deletion fixtures pass.
 - [ ] Sentry redaction and PostHog event payloads are inspected in a non-production environment.
-- [ ] Retention and deletion jobs are verified against a production-like database and private Storage bucket.
+- [x] Retention/deletion boundary has synthetic ownership, expiry, retry, private-path, and content-free audit contract coverage in `lib/documents/deletion.test.ts` and `tests/integration/document-deletion-boundary.test.ts`.
+- [ ] Production-like retention/deletion execution uses disposable synthetic records and private Storage only; no real customer data may be used for this verification.
 - [ ] No service-role keys, provider secrets, customer data, or real outbound destinations are present in source, fixtures, logs, or browser bundles.
 - [ ] Draft approval, reminder scheduling, and outbound authorization remain separate from sending.
 
 ## Production verification
 
-- [ ] Vercel deployment is READY and its commit SHA is the intended `main` merge.
-- [ ] Build error logs are empty apart from known non-fatal platform warnings.
-- [ ] Runtime error aggregation and error/fatal logs are empty after smoke traffic.
-- [ ] Public smoke routes return expected status codes and security headers.
+- [x] Stage 9 safe implementation deployment is READY on the intended `main` merge and has no deployment-scoped error/fatal logs after verification traffic.
+- [x] Build error logs are empty apart from known non-fatal platform warnings.
+- [ ] Runtime error aggregation and error/fatal logs are empty after authenticated synthetic smoke traffic.
+- [ ] Public smoke routes return expected status codes and security headers on the final launch candidate.
 - [ ] Authenticated E2E uses a disposable synthetic account only; no real customer data or provider side effects.
 - [ ] Rollback target and incident owner are recorded before launch.
 
-Until the external observability configuration, retention-job evidence, and authenticated synthetic E2E are supplied, Stage 9 remains an implementation and verification blocker rather than a public launch approval.
+Until external observability configuration/provider payload review, production-like synthetic retention/deletion execution, authenticated synthetic E2E, and explicit human release approval are supplied, Stage 9 remains fail-closed for public launch.
