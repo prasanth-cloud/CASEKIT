@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { ownedStoragePath, retentionExpired } from "@/lib/documents/deletion";
+import { ownedStoragePath, retentionExpired } from "../../lib/documents/deletion";
 
 const root = process.cwd();
 const route = fs.readFileSync(path.join(root, "app/api/cases/[id]/documents/[documentId]/delete/route.ts"), "utf8");

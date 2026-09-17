@@ -12,8 +12,19 @@ export type DeletionReason = "user_request" | "retention_expired";
 
 export function ownedStoragePath(userId: string, caseId: string, storagePath: string) {
   const normalized = storagePath.replace(/^\/+/, "");
+  const segments = normalized.split("/");
   const prefix = `${userId}/${caseId}/`;
-  if (!userId || !caseId || !normalized.startsWith(prefix) || normalized.length <= prefix.length) {
+  if (
+    !userId ||
+    !caseId ||
+    segments.length !== 3 ||
+    segments[0] !== userId ||
+    segments[1] !== caseId ||
+    !segments[2] ||
+    segments[2] === "." ||
+    segments[2] === ".." ||
+    !normalized.startsWith(prefix)
+  ) {
     throw new Error("Document storage path does not belong to this user and case.");
   }
   return normalized;

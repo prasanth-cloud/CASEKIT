@@ -6,6 +6,8 @@ describe("document deletion boundary", () => {
     expect(ownedStoragePath("user-1", "case-1", "user-1/case-1/receipt.pdf")).toBe("user-1/case-1/receipt.pdf");
     expect(() => ownedStoragePath("user-1", "case-1", "user-2/case-1/receipt.pdf")).toThrow("does not belong");
     expect(() => ownedStoragePath("user-1", "case-1", "user-1/case-2/receipt.pdf")).toThrow("does not belong");
+    expect(() => ownedStoragePath("user-1", "case-1", "user-1/case-1/../other.pdf")).toThrow("does not belong");
+    expect(() => ownedStoragePath("user-1", "case-1", "user-1/case-1/nested/receipt.pdf")).toThrow("does not belong");
   });
 
   it("recognizes retention expiry without treating missing or invalid dates as expired", () => {
