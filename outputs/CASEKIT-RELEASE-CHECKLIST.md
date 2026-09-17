@@ -31,7 +31,9 @@ Configure these values in Vercel or another secret manager. Do not commit them:
 - `POSTHOG_KEY` and optional `POSTHOG_HOST` using HTTPS; and
 - `NEXT_PUBLIC_CASEKIT_OBSERVABILITY=true` only when the reviewed provider bridge is deployed.
 
-The default is disabled. `node scripts/check-release-gates.mjs --production` fails until every value is present and valid. The browser boundary emits only sanitized custom events; it does not make network requests itself and does not include messages, stacks, case IDs, document contents, email addresses, or uploaded text.
+The default is disabled. `node scripts/check-release-gates.mjs --production` fails until every value is present and valid. The browser boundary emits sanitized custom events and, when enabled, contacts only the same-origin bridge; it does not contact providers directly and does not include messages, stacks, case IDs, document contents, email addresses, or uploaded text.
+
+When enabled, the browser sends the same allowlisted payload to the same-origin `/api/observability` route. The route requires a same-origin request, caps the body at 4 KiB, reparses the payload, and forwards only fixed/redacted fields to Sentry and anonymous PostHog capture. Provider keys remain server-only.
 
 ## Security and privacy review
 

@@ -1,12 +1,38 @@
 const defaultPostHogHost = "https://us.i.posthog.com";
+const allowedPostHogHosts = new Set(["us.i.posthog.com", "eu.i.posthog.com"]);
 
 function present(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function validHttpsUrl(value) {
+function validPostHogHost(value) {
   try {
-    return new URL(value).protocol === "https:";
+    const url = new URL(value);
+    return url.protocol === "https:"
+      && !url.port
+      && !url.username
+      && !url.password
+      && !url.search
+      && !url.hash
+      && allowedPostHogHosts.has(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function validSentryDsn(value) {
+  if (!present(value)) return false;
+  try {
+    const url = new URL(value.trim());
+    const projectId = url.pathname.replace(/^\/+|\/+$/g, "");
+    return url.protocol === "https:"
+      && present(url.username)
+      && present(url.hostname)
+      && !url.port
+      && !url.search
+      && !url.hash
+      && (url.hostname === "sentry.io" || url.hostname.endsWith(".ingest.sentry.io"))
+      && /^\d+$/.test(projectId);
   } catch {
     return false;
   }
@@ -17,8 +43,8 @@ export function evaluateReleaseGates(env = process.env) {
   const checks = {
     releaseApproved: env.CASEKIT_RELEASE_APPROVED === "true",
     observabilityEnabled: env.CASEKIT_OBSERVABILITY_ENABLED === "true",
-    sentryConfigured: present(env.SENTRY_DSN),
-    postHogConfigured: present(env.POSTHOG_KEY) && validHttpsUrl(postHogHost),
+    sentryConfigured: validSentryDsn(env.SENTRY_DSN),
+    postHogConfigured: present(env.POSTHOG_KEY) && validPostHogHost(postHogHost),
     browserBridgeConfigured: env.NEXT_PUBLIC_CASEKIT_OBSERVABILITY === "true",
   };
   const missing = Object.entries(checks)

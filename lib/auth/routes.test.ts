@@ -5,11 +5,13 @@ describe("isPublicPath", () => {
   it("allows login and auth callback routes", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/auth/callback")).toBe(true);
+    expect(isPublicPath("/api/observability")).toBe(true);
   });
 
   it("keeps workspace routes protected", () => {
     expect(isPublicPath("/")).toBe(false);
     expect(isPublicPath("/cases")).toBe(false);
     expect(isPublicPath("/documents")).toBe(false);
+    expect(isPublicPath("/api/cases")).toBe(false);
   });
 });
