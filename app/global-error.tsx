@@ -1,6 +1,13 @@
 "use client";
 
-export default function GlobalError({ reset }: { reset: () => void }) {
+import { useEffect } from "react";
+import { captureClientError } from "@/lib/observability/browser";
+
+export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    captureClientError(error, { surface: "global_error", route: "unknown", code: "global_render_failed" });
+  }, [error]);
+
   return (
     <html lang="en">
       <body>

@@ -18,9 +18,17 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm exec vitest run tests/integration
+pnpm exec vitest run tests/a11y
+pnpm exec vitest run tests/evals
+node --test scripts/release-gates.test.mjs
+pnpm build && node scripts/public-smoke.mjs
+node scripts/check-release-gates.mjs --production
 ```
 
-Stage 1 is intentionally shell-only. Authentication, persistence, uploads, AI provider calls, email sending, and payments are not wired yet. The existing `dist/` browser prototype remains preserved as a reference.
+The original Stage 1 shell and `dist/` browser prototype remain preserved as references. Later-stage workflows are gated behind review and external configuration; a successful build alone is not production launch approval.
+
+`node scripts/check-release-gates.mjs --production` intentionally fails closed until external Sentry and PostHog configuration and explicit release approval are present. Provider keys belong only in Vercel or another secret manager; they are never committed or exposed to the browser. The CI release check reports missing production configuration without launching anything.
 
 ## Development workflow
 
@@ -43,3 +51,5 @@ Stage 1 is intentionally shell-only. Authentication, persistence, uploads, AI pr
 - AI Assistant
 
 See `DESIGN.md` for the UI/UX system and `CONTRIBUTING.md` for the engineering workflow.
+
+The supplemental product sequencing, validation gates, support boundaries, pricing hypotheses, and future automation scope are recorded in [`outputs/CASEKIT-PRODUCT-ROADMAP.md`](outputs/CASEKIT-PRODUCT-ROADMAP.md). The roadmap does not replace stage issue acceptance criteria or the release checklist.

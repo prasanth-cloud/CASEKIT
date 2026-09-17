@@ -1,6 +1,13 @@
 "use client";
 
-export default function Error({ reset }: { reset: () => void }) {
+import { useEffect } from "react";
+import { captureClientError } from "@/lib/observability/browser";
+
+export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    captureClientError(error, { surface: "route_error", route: "unknown", code: "route_render_failed" });
+  }, [error]);
+
   return (
     <div className="page-wrap">
       <section className="panel" style={{ padding: 24 }}>
