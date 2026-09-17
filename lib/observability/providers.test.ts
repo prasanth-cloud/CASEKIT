@@ -4,6 +4,21 @@ import { buildPostHogRequest, buildSentryRequest, forwardObservabilityEvent } fr
 const now = new Date("2026-09-17T15:00:00.000Z");
 
 describe("observability provider bridge", () => {
+  it.each(["o123.ingest.sentry.io", "o123.ingest.de.sentry.io", "o123.ingest.us.sentry.io"])("accepts official Sentry ingestion host %s", (host) => {
+    const request = buildSentryRequest(
+      { kind: "error", errorType: "Error", surface: "route_error", route: "unknown" },
+      `https://public@${host}/123`, now, "0123456789abcdef0123456789abcdef",
+    );
+    expect(new URL(request!.url).hostname).toBe(host);
+  });
+
+  it.each(["o123.ingest.de.sentry.io.attacker.example", "attacker.ingest.de.sentry.io", "o123.ingest.attacker.sentry.io"])("rejects Sentry hostname lookalike %s", (host) => {
+    expect(buildSentryRequest(
+      { kind: "error", errorType: "Error", surface: "route_error", route: "unknown" },
+      `https://public@${host}/123`, now, "0123456789abcdef0123456789abcdef",
+    )).toBeNull();
+  });
+
   it("builds a Sentry envelope from fixed, content-free fields", () => {
     const request = buildSentryRequest(
       {

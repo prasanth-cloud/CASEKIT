@@ -46,7 +46,7 @@ function parseSentryDsn(value: unknown): SentryDsn | null {
       || url.port
       || url.search
       || url.hash
-      || !(url.hostname === "sentry.io" || url.hostname.endsWith(".ingest.sentry.io"))
+      || !(url.hostname === "sentry.io" || /^o\d+\.ingest\.(?:(?:de|us)\.)?sentry\.io$/.test(url.hostname))
       || !/^\d+$/.test(projectId)
     ) return null;
     return { publicKey: decodeURIComponent(url.username), host: url.host, projectId };
