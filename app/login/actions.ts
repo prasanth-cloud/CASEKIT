@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function login(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const nextPath = String(formData.get("next") ?? "/");
+  const nextPath = String(formData.get("next") ?? "/home");
 
   if (!email || !password) {
     redirect(`/login?error=${encodeURIComponent("Email and password are required.")}`);
@@ -31,7 +31,7 @@ export async function login(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent("Signed in, but the workspace profile could not be initialized.")}`);
   }
 
-  redirect(nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/");
+  redirect(nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/home");
 }
 
 export async function logout() {

@@ -4,6 +4,10 @@ import { isPublicPath } from "@/lib/auth/routes";
 import { readSupabasePublicEnv } from "@/lib/supabase/env";
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/" || request.nextUrl.pathname === "/demo") {
+    return NextResponse.next();
+  }
+
   const { url, publishableKey } = readSupabasePublicEnv();
   let response = NextResponse.next({ request });
 
@@ -35,7 +39,7 @@ export async function proxy(request: NextRequest) {
 
   if (user && request.nextUrl.pathname === "/login") {
     const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = "/";
+    homeUrl.pathname = "/home";
     homeUrl.search = "";
     return NextResponse.redirect(homeUrl);
   }

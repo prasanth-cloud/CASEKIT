@@ -32,6 +32,23 @@ async function waitForServer() {
 try {
   await waitForServer();
 
+  const overview = await request("/");
+  assert.equal(overview.status, 200);
+  const overviewHtml = await overview.text();
+  assert.match(overviewHtml, /href="\/demo"/);
+  assert.equal((overviewHtml.match(/<main[ >]/g) ?? []).length, 1);
+
+  const demo = await request("/demo");
+  assert.equal(demo.status, 200);
+  const demoHtml = await demo.text();
+  assert.match(demoHtml, /Synthetic demo/);
+  assert.match(demoHtml, /download="casekit-synthetic-demo.txt"/);
+  assert.equal((demoHtml.match(/<main[ >]/g) ?? []).length, 1);
+
+  const home = await request("/home");
+  assert.ok([307, 308].includes(home.status));
+  assert.match(home.headers.get("location") ?? "", /\/login\?next=%2Fhome/);
+
   const login = await request("/login");
   const loginHtml = await login.text();
   assert.equal(login.status, 200);
