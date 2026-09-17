@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deletionAlreadyComplete, ownedStoragePath, retentionExpired, type DeletionReason } from "@/lib/documents/deletion";
+import { ownedStoragePath, retentionExpired, type DeletionReason } from "@/lib/documents/deletion";
 import { createClient } from "@/lib/supabase/server";
 
 type DeletionRpcClient = {
@@ -41,7 +41,6 @@ export async function POST(
     .maybeSingle();
 
   if (documentError || !document) return redirectToCase(request, caseId, "error", "Document not found or no longer accessible.");
-  if (deletionAlreadyComplete(document)) return redirectToCase(request, caseId, "documentDeleted");
   if (reason === "retention_expired" && !retentionExpired(document.retention_until)) {
     return redirectToCase(request, caseId, "error", "This document has not reached its retention date.");
   }
@@ -53,8 +52,8 @@ export async function POST(
     return redirectToCase(request, caseId, "error", "Document ownership validation failed.");
   }
 
-  // The private object is removed through the caller's Storage RLS first. If the
-  // database finalization fails, retrying this endpoint safely repairs metadata/audit.
+  // Always retry the private Storage removal, even when metadata already says deleted.
+  // This makes retries repair a rare prior partial failure without exposing the path.
   const { error: storageError } = await supabase.storage.from("case-documents").remove([storagePath]);
   if (storageError) return redirectToCase(request, caseId, "error", "Document storage could not be deleted.");
 
