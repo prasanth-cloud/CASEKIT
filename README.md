@@ -51,3 +51,5 @@ The original Stage 1 shell and `dist/` browser prototype remain preserved as ref
 - AI Assistant
 
 See `DESIGN.md` for the UI/UX system and `CONTRIBUTING.md` for the engineering workflow.
+
+The supplemental product sequencing, validation gates, support boundaries, pricing hypotheses, and future automation scope are recorded in [`outputs/CASEKIT-PRODUCT-ROADMAP.md`](outputs/CASEKIT-PRODUCT-ROADMAP.md). The roadmap does not replace stage issue acceptance criteria or the release checklist.
