@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSafeErrorEvent, createSafeProductEvent, sanitizeProductProperties } from "./privacy";
+import { createSafeErrorEvent, createSafeProductEvent, parseSafeObservabilityEvent, sanitizeProductProperties } from "./privacy";
 
 describe("privacy-safe observability", () => {
   it("drops messages, identifiers, and arbitrary properties from error events", () => {
@@ -22,6 +22,8 @@ describe("privacy-safe observability", () => {
       message: "private customer text",
       caseId: "case-1",
       huge: 1_000_001,
+      statusLabel: "customer name",
+      stage: "private stage",
     })).toEqual({ status: "approved", success: true, count: 2 });
   });
 
@@ -31,5 +33,33 @@ describe("privacy-safe observability", () => {
       name: "draft_approved",
       properties: { stage: "review", count: 1 },
     });
+  });
+
+  it("reparses untrusted bridge bodies without preserving messages or unknown fields", () => {
+    const event = parseSafeObservabilityEvent({
+      kind: "error",
+      errorType: "Error",
+      surface: "route_error",
+      route: "/cases/private-case",
+      code: "route_render_failed",
+      message: "private customer content",
+      stack: "private stack",
+    });
+
+    expect(event).toEqual({
+      kind: "error",
+      errorType: "Error",
+      surface: "route_error",
+      route: "unknown",
+      code: "route_render_failed",
+    });
+    expect(JSON.stringify(event)).not.toContain("private-case");
+    expect(JSON.stringify(event)).not.toContain("private customer content");
+  });
+
+  it("rejects malformed or unsupported bridge bodies", () => {
+    expect(parseSafeObservabilityEvent(null)).toBeNull();
+    expect(parseSafeObservabilityEvent({ kind: "error", errorType: "Error" })).toBeNull();
+    expect(parseSafeObservabilityEvent({ kind: "product_event", name: "unsupported", properties: {} })).toBeNull();
   });
 });
