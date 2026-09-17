@@ -31,7 +31,7 @@ function validSentryDsn(value) {
       && !url.port
       && !url.search
       && !url.hash
-      && (url.hostname === "sentry.io" || url.hostname.endsWith(".ingest.sentry.io"))
+      && (url.hostname === "sentry.io" || /^o\d+\.ingest\.(?:(?:de|us)\.)?sentry\.io$/.test(url.hostname))
       && /^\d+$/.test(projectId);
   } catch {
     return false;

@@ -2,6 +2,15 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { evaluateReleaseGates } from "./release-gates.mjs";
 
+test("Sentry regional hosts pass while lookalikes fail closed", () => {
+  for (const host of ["o123.ingest.sentry.io", "o123.ingest.de.sentry.io", "o123.ingest.us.sentry.io"]) {
+    assert.equal(evaluateReleaseGates({ SENTRY_DSN: `https://public@${host}/123` }).checks.sentryConfigured, true);
+  }
+  for (const host of ["o123.ingest.de.sentry.io.attacker.example", "attacker.ingest.de.sentry.io", "o123.ingest.attacker.sentry.io"]) {
+    assert.equal(evaluateReleaseGates({ SENTRY_DSN: `https://public@${host}/123` }).checks.sentryConfigured, false);
+  }
+});
+
 test("release gates fail closed without external configuration", () => {
   const result = evaluateReleaseGates({});
   assert.equal(result.ready, false);
