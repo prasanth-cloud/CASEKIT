@@ -9,7 +9,7 @@ export function WorkspaceShell({ children }: Readonly<{ children: React.ReactNod
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  if (pathname.startsWith("/login") || pathname.startsWith("/auth")) {
+  if (pathname === "/" || pathname === "/demo" || pathname.startsWith("/demo/") || pathname.startsWith("/login") || pathname.startsWith("/auth")) {
     return <main>{children}</main>;
   }
 

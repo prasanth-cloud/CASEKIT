@@ -38,4 +38,13 @@ describe("accessible page contracts", () => {
     expect(cases).toContain("label(item.status)");
     expect(cases).toContain('role="alert"');
   });
+
+  it("keeps the public showcase clearly separated from real workspace data", () => {
+    const home = source("app/page.tsx");
+    const demo = source("app/demo/page.tsx");
+    expect(home).toContain('href="/demo"');
+    expect(home).toContain("public demo uses synthetic data only");
+    expect(demo).toContain('aria-label="Demo safety notice"');
+    expect(demo).toContain("does not connect to Supabase");
+  });
 });

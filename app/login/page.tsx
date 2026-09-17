@@ -20,7 +20,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {params.error ? <div className="auth-error" role="alert">{params.error}</div> : null}
 
         <form action={login} className="auth-form">
-          <input type="hidden" name="next" value={params.next ?? "/"} />
+          <input type="hidden" name="next" value={params.next ?? "/home"} />
           <label>
             <span>Email</span>
             <input name="email" type="email" autoComplete="email" required />

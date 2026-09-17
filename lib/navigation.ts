@@ -4,7 +4,7 @@ export type NavigationItem = {
 };
 
 export const workspaceNavigation: NavigationItem[] = [
-  { label: "Home", href: "/" },
+  { label: "Home", href: "/home" },
   { label: "Cases", href: "/cases" },
   { label: "Documents", href: "/documents" },
   { label: "Tasks", href: "/tasks" },
