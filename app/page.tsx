@@ -8,6 +8,8 @@ export default function HomePage() {
         <nav className="showcase-nav" aria-label="Showcase navigation"><Link href="#features">Features</Link><Link href="#boundaries">Safety boundaries</Link><Link className="text-button" href="/login?next=/cases">Sign in</Link></nav>
       </header>
 
+      <p className="showcase-header">Explore a synthetic sample. The current workspace supports private intake and fact review; automatic evidence analysis and drafting are still being completed.</p>
+
       <section className="showcase-hero" aria-labelledby="showcase-title">
         <div><div className="eyebrow">Evidence workspace</div><h1 id="showcase-title">Turn scattered purchase evidence into an organized case.</h1><p>CaseKit helps you collect documents, review the facts, prepare an evidence-backed request, and keep every decision auditable.</p><div className="showcase-actions"><Link className="primary-button" href="/demo">Explore the interactive demo</Link><Link className="text-button" href="/login?next=/cases">Open my workspace</Link></div></div>
         <aside className="showcase-preview" aria-label="Demo case preview"><div className="preview-topline"><span className="status-badge">Draft ready</span><span className="muted-cell">CASE-1042</span></div><h2>Laptop delivery dispute</h2><p>3 verified evidence claims · 1 grounded draft · no message sent</p><div className="preview-progress"><span /><span /><span /><span /></div><Link className="text-button" href="/demo">View sample case →</Link></aside>
