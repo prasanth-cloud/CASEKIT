@@ -2,6 +2,19 @@
 
 This checklist is the release gate for the first production launch. A deploy that builds successfully is not a launch approval.
 
+## Verification status — 2026-09-17
+
+**HOLD: full authenticated upload-to-draft E2E did not pass.** Sign-in, intake,
+private Storage, reviewed fact persistence, and the ready transition passed.
+Draft generation remained disabled with zero verified document-backed claims.
+The analysis module has no application caller on this revision. Do not seed claims
+manually to turn this into a passing end-to-end test.
+
+See [verification evidence and rollback plan](CASEKIT-RELEASE-VERIFICATION-2026-09-17.md).
+The human approval and observability flags were enabled previously; they do not
+override these unresolved verification gates. No new production release was made
+for this documentation update.
+
 ## Automated checks
 
 Run from a clean checkout:
@@ -37,12 +50,12 @@ When enabled, the browser sends the same allowlisted payload to the same-origin 
 
 ## Security and privacy review
 
-- [ ] Supabase security and performance advisors reviewed after every migration.
+- [x] Supabase security and performance advisors rechecked on the current schema; unresolved findings are recorded below.
 - [ ] RLS and private Storage isolation tested with two synthetic users.
-- [ ] Uploaded-document prompt injection, PII, unsupported source, unsafe-language, and deletion fixtures pass.
+- [x] Uploaded-document prompt injection, PII, unsupported source, unsafe-language, and deletion fixtures pass.
 - [ ] Sentry redaction and PostHog event payloads are inspected in a non-production environment.
 - [x] Retention/deletion boundary has synthetic ownership, expiry, retry, private-path, and content-free audit contract coverage in `lib/documents/deletion.test.ts` and `tests/integration/document-deletion-boundary.test.ts`.
-- [ ] Production-like retention/deletion execution uses disposable synthetic records and private Storage only; no real customer data may be used for this verification.
+- [x] Production-like retention/deletion execution used disposable synthetic records and private Storage only; eventual removal passed with the immediate-access limitation recorded below.
 - [ ] No service-role keys, provider secrets, customer data, or real outbound destinations are present in source, fixtures, logs, or browser bundles.
 - [ ] Draft approval, reminder scheduling, and outbound authorization remain separate from sending.
 
@@ -50,9 +63,36 @@ When enabled, the browser sends the same allowlisted payload to the same-origin 
 
 - [x] Stage 9 safe implementation deployment is READY on the intended `main` merge and has no deployment-scoped error/fatal logs after verification traffic.
 - [x] Build error logs are empty apart from known non-fatal platform warnings.
-- [ ] Runtime error aggregation and error/fatal logs are empty after authenticated synthetic smoke traffic.
-- [ ] Public smoke routes return expected status codes and security headers on the final launch candidate.
+- [x] Deployment-scoped error query was empty after authenticated synthetic smoke traffic (bounded 30-minute window, not all-time aggregation).
+- [x] Public smoke routes returned expected status codes and security headers on the tested deployment.
 - [ ] Authenticated E2E uses a disposable synthetic account only; no real customer data or provider side effects.
-- [ ] Rollback target and incident owner are recorded before launch.
+- [x] Rollback target and incident owner are recorded before launch; no rollback drill was performed.
 
-Until external observability configuration/provider payload review, production-like synthetic retention/deletion execution, authenticated synthetic E2E, and explicit human release approval are supplied, Stage 9 remains fail-closed for public launch.
+## Latest evidence
+
+- [x] Fresh security/performance advisor review completed. Five intentional
+  authenticated SECURITY DEFINER warnings and three unused-index notices remain;
+  leaked-password protection is also disabled. This is not a clean security sign-off.
+- [x] All 89 Vitest tests, including integration, eval, accessibility-contract,
+  privacy, and deletion coverage, passed; six release-gate tests passed.
+- [x] Lint, typecheck, production build, and local public smoke passed.
+  Lint retains one existing unused-variable warning.
+- [x] Production public routes and DENY/nosniff headers passed.
+- [x] Disposable authenticated intake/review smoke executed and cleaned up.
+- [ ] Full authenticated upload-to-grounded-draft journey passes (blocked as above).
+- [x] Future retention blocked deletion; expired retention removed the object;
+  retry retained exactly one content-free deletion audit event.
+- [ ] Immediate post-delete inaccessibility is established: one immediate read
+  succeeded; the next read was denied. Eventual deletion passed, not immediate revocation.
+- [x] A different synthetic auth claim could not read/finalize the document
+  under the authenticated database role (not a second browser account E2E).
+- [x] Cleanup: zero test Auth users, cases, documents, or Storage objects;
+  append-only content-free audit events retained. Reopening the case redirected to login.
+- [x] Deployment-scoped error query returned no entries after smoke traffic.
+  This bounded log observation does not prove all-time runtime health.
+- [x] Incident owner and exact READY rollback target recorded in the linked plan.
+- [ ] Non-production provider payload inspection completed (production delivery
+  evidence does not substitute for this requirement).
+
+Stage 9 remains open. Do not declare public launch readiness, merge a release
+change, close the issue, or advance stages until the unchecked gates are resolved.
